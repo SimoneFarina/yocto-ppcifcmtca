@@ -1,0 +1,49 @@
+
+# This file is your local configuration file and is where all local user
+# settings are placed.
+# Package Management configuration
+PACKAGE_CLASSES ?= "package_rpm"
+
+# Extra image configuration defaults
+# The EXTRA_IMAGE_FEATURES variable allows extra packages to be added to
+# the generated images.
+EXTRA_IMAGE_FEATURES = "debug-tweaks"
+
+# Additional image features
+# The following is a list of additional classes to use when building images 
+# which enable extra features.
+USER_CLASSES ?= "image-mklibsimage-prelink"
+
+# CONF_VERSION is increased each time build/conf/ changes incompatibly and 
+# is used to track the version of this file when it was generated.
+CONF_VERSION = "1"
+
+# Machine Selection
+# These are the machines available for the IOxOS family of MTCA boards:
+#MACHINE = "ESS-IFC1410"
+#MACHINE = "ESS-IFC1420"
+#
+# Default Machine for T2080 QorIQ PPC family
+MACHINE = "t2080qds-64b"
+
+# Distro selection
+DISTRO = "fsl-networking"
+
+# Parallelism Options
+BB_NUMBER_THREADS = "8"
+PARALLEL_MAKE = "-j 1"
+
+# Source download dir
+#DL_DIR = "/opt/yt_sdks/QorIQ-SDK-V<x.y>-<date>-yocto/\
+#build_t4240qds_release/../sources"
+
+# The sstate-cache dir
+#SSTATE_DIR = "/opt/yt_sdks/QorIQ-SDK-V<x.y>-<date>-yocto/\
+#build_t4240qds_release/../sstate-cache"
+
+# use xz instead of gzip for sstate-cache
+#SSTATE_PKG_SUFFIX ?= "txz"
+#SSTATE_PKG_TARZIPPROG ?= "xz"
+
+# delete sources after build
+#INHERIT += "rm_work"

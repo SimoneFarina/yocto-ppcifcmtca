@@ -1,0 +1,101 @@
+This README file contains information on the contents of the
+ESS-IFC1410 layer.
+
+Please see the corresponding sections below for details.
+
+
+Dependencies
+============
+
+This layer depends on:
+
+  URI: git://git.openembedded.org/bitbake
+  branch: master
+
+  URI: git://git.openembedded.org/openembedded-core
+  layers: meta
+  branch: master
+
+  URI: git://git.yoctoproject.org/xxxx
+  layers: xxxx
+  branch: master
+
+  URI: https://github.com/openembedded/meta-openembedded.git
+  branch: master
+
+  URI: https://github.com/openembedded/openembedded-core.git
+  branch: master
+
+  URI: git://git.yoctoproject.org/meta-fsl-ppc
+  branch: master
+
+
+Patches
+=======
+
+Please submit any patches against the ESS-IFC1410 layer to the
+xxxx mailing list (xxxx@zzzz.org) and cc: the maintainer:
+
+Maintainer: XXX YYYYYY <xxx.yyyyyy@zzzzz.com>
+
+
+Table of Contents
+=================
+
+  I. Adding the ESS-IFC1410 layer to your build
+ II. Misc
+
+
+I. Adding the ESS-IFC1410 layer to your build
+=================================================
+
+--- replace with specific instructions for the ESS-IFC1410 layer ---
+
+In order to use this layer, you need to make the build system aware of
+it.
+
+Assuming the ESS-IFC1410 layer exists at the top-level of your
+yocto build tree, you can add it to the build system by adding the
+location of the ESS-IFC1410 layer to poky/build/conf/bblayers.conf, along with any
+other layers needed. e.g.:
+
+  BBLAYERS ?= " \
+    /path/to/yocto/meta \
+    /path/to/yocto/meta-poky \
+    /path/to/yocto/meta-yocto-bsp \
+    /path/to/yocto/meta-openembedded/meta-oe \
+    /path/to/yocto/openembedded-core/meta \
+    /path/to/yocto/meta-fsl-ppc \
+    /path/to/yocto/meta-ifc1410 \
+    "
+
+another example might be:
+
+  BBLAYERS ?= " \
+    ${TOPDIR}/../meta \
+    ${TOPDIR}/../meta-poky \
+    ${TOPDIR}/../meta-yocto-bsp \
+    ${TOPDIR}/../../meta-openembedded/meta-oe \
+    ${TOPDIR}/../../openembedded-core/meta \
+    ${TOPDIR}/../../meta-fsl-ppc \
+    ${TOPDIR}/../../meta-ifc1410 \
+    "
+
+here every path is defined from the ${TOPDIR} which is the build directory in the poky folder.
+
+II. Misc
+========
+
+Add the following machines to the poky/build/conf/local.conf
+Comment any line regarding any other machine but the ifc1410 version that is required to be compiled.
+
+#
+# This is the machine used to compile the default meta-fsl-ppc
+#
+#MACHINE ?= "t2080qds"
+#
+# This is the machine defined for the IFC1410 T2080 PPC CPU
+#
+#MACHINE ?= "ess-ifc1410-64b"
+MACHINE ?= "ess-ifc1410-32b"
+#
