@@ -13,14 +13,12 @@ KERNEL_DEVICETREE_$MACHINE = "${MACHINE}.dtb"
 
 FILESEXTRAPATHS_prepend_ess-ifc1410-64b-rt := "${THISDIR}/files64:"
 SRC_URI_append_ess-ifc1410-64b-rt = " file://fragment.cfg "
-#_append_ess-ifc1410-64b-rt
 #SRC_URI += "file://defconfig "
 
 FILESEXTRAPATHS_append := ":${THISDIR}/../../conf/machine/boards/ifc1410:${THISDIR}/files:"
 
 SRC_URI_append = " file://0001-fixed-issue-with-crypto-when-compiling-for-kernel-ve.patch \
 				"
-#file://0001-fixed-issue-with-crypto-when-compiling-for-kernel-mo.patch
 
 inherit xilinx-utils
 # Using the MACHINE_DEVICETREE and MACHINE_KCONFIG vars, append them to SRC_URI

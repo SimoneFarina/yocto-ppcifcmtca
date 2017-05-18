@@ -1,0 +1,32 @@
+From 966cb3c2bccf117ec5d8d0ed601bab77c55712ce Mon Sep 17 00:00:00 2001
+From: Simone Farina <simone.farina@esss.se>
+Date: Thu, 18 May 2017 18:12:07 +0200
+Subject: [PATCH] updated monitor.c to work with openssl 1.1.0
+
+---
+ monitor.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/monitor.c b/monitor.c
+index 43f4847..058dc9b 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -579,9 +579,13 @@ mm_answer_moduli(int sock, Buffer *m)
+ 		return (0);
+ 	} else {
+ 		/* Send first bignum */
++		const BIGNUM *p, *g;
++
++		DH_get0_pqg(dh, &p, NULL, &g);
++
+ 		buffer_put_char(m, 1);
+-		buffer_put_bignum2(m, dh->p);
+-		buffer_put_bignum2(m, dh->g);
++		buffer_put_bignum2(m, p);
++		buffer_put_bignum2(m, g);
+ 
+ 		DH_free(dh);
+ 	}
+-- 
+2.1.4
+

@@ -1,0 +1,26 @@
+From db2a75e663367bb81a82a4b4280e47bbf5b62664 Mon Sep 17 00:00:00 2001
+From: Simone Farina <simone.farina@esss.se>
+Date: Tue, 25 Apr 2017 11:36:00 +0200
+Subject: [PATCH] fixed OLD_PROJECTVERSION issue for hypervisor
+
+---
+ Makefile | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 703d58e..fb398d8 100644
+--- a/Makefile
++++ b/Makefile
+@@ -38,7 +38,8 @@ export LIBOS := $(src)libos
+ export LIBOS_DIR := $(LIBOS)/lib
+ export LIBOS_INC := $(LIBOS)/include
+ 
+-export OLD_PROJECTVERSION=$(strip $(shell cat $(O)/version))
++#export OLD_PROJECTVERSION=$(strip $(shell cat $(O)/version))
++export OLD_PROJECTVERSION=0
+ 
+ .PHONY: all $(wildcard test/*)
+ all:
+-- 
+2.1.4
+

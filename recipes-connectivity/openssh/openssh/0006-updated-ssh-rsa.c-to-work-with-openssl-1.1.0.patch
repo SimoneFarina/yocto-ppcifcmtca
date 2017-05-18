@@ -1,0 +1,34 @@
+From 91385a5c5803373f7af26f31326e6c4c15df0700 Mon Sep 17 00:00:00 2001
+From: Simone Farina <simone.farina@esss.se>
+Date: Thu, 18 May 2017 16:59:56 +0200
+Subject: [PATCH] updated ssh-rsa.c to work with openssl 1.1.0
+
+---
+ ssh-rsa.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/ssh-rsa.c b/ssh-rsa.c
+index cde05df..efcda37 100644
+--- a/ssh-rsa.c
++++ b/ssh-rsa.c
+@@ -100,7 +100,7 @@ ssh_rsa_sign(const struct sshkey *key, u_char **sigp, size_t *lenp,
+ 		hash_alg = rsa_hash_alg_from_ident(alg_ident);
+ 	if (key == NULL || key->rsa == NULL || hash_alg == -1 ||
+ 	    sshkey_type_plain(key->type) != KEY_RSA ||
+-	    BN_num_bits(key->rsa->n) < SSH_RSA_MINIMUM_MODULUS_SIZE)
++	    RSA_bits(key->rsa) < SSH_RSA_MINIMUM_MODULUS_SIZE)
+ 		return SSH_ERR_INVALID_ARGUMENT;
+ 	slen = RSA_size(key->rsa);
+ 	if (slen <= 0 || slen > SSHBUF_MAX_BIGNUM)
+@@ -172,7 +172,7 @@ ssh_rsa_verify(const struct sshkey *key,
+ 
+ 	if (key == NULL || key->rsa == NULL ||
+ 	    sshkey_type_plain(key->type) != KEY_RSA ||
+-	    BN_num_bits(key->rsa->n) < SSH_RSA_MINIMUM_MODULUS_SIZE ||
++	    RSA_bits(key->rsa) < SSH_RSA_MINIMUM_MODULUS_SIZE ||
+ 	    sig == NULL || siglen == 0)
+ 		return SSH_ERR_INVALID_ARGUMENT;
+ 
+-- 
+2.1.4
+

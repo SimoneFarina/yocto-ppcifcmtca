@@ -1,0 +1,25 @@
+From 711957fb688a6ea40f270555262990216eff9f28 Mon Sep 17 00:00:00 2001
+From: Simone Farina <simone.farina@esss.se>
+Date: Tue, 25 Apr 2017 11:54:44 +0200
+Subject: [PATCH] changed HOSTCC from cc to gcc
+
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kconfig/Makefile b/kconfig/Makefile
+index 7df73db..ef6c802 100644
+--- a/kconfig/Makefile
++++ b/kconfig/Makefile
+@@ -3,7 +3,7 @@
+ # These targets are used from top-level makefile
+ 
+ PHONY += oldconfig xconfig gconfig menuconfig config silentoldconfig update-po-config
+-HOSTCC := cc
++HOSTCC := gcc
+ HOSTCXX := c++
+ HOSTCFLAGS := -O2 -DPROJECT=\"Freescale-Embedded-Hypervisor\" -DPROJECTADJ=\"Freescale-Embedded-Hypervisor\" -I.
+ CONFIG_SHELL := sh
+-- 
+2.1.4
+

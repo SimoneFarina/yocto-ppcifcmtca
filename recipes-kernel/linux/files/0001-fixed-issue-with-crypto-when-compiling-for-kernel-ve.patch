@@ -1,0 +1,40 @@
+From 9884ac3322597f2b9522f5a2cae94553d0b0b81a Mon Sep 17 00:00:00 2001
+From: Simone Farina <simone.farina@esss.se>
+Date: Wed, 26 Apr 2017 09:14:21 +0200
+Subject: [PATCH] fixed issue with crypto when compiling for kernel version
+ greater than 4.6
+
+---
+ drivers/staging/crypto/cryptodev/zc.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/staging/crypto/cryptodev/zc.c b/drivers/staging/crypto/cryptodev/zc.c
+index 3266e7d..2e251f6 100644
+--- a/drivers/staging/crypto/cryptodev/zc.c
++++ b/drivers/staging/crypto/cryptodev/zc.c
+@@ -59,7 +59,21 @@ int __get_userbuf(uint8_t __user *addr, uint32_t len, int write,
+ 	}
+ 
+ 	down_read(&mm->mmap_sem);
+-	ret = get_user_pages((unsigned long)addr, pgcount, write, 0, pg, NULL);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 6, 0))
++	ret = get_user_pages(task, mm,
++			(unsigned long)addr, pgcount, write, 0, pg, NULL);
++#elif (LINUX_VERSION_CODE < KERNEL_VERSION(4, 9, 0))
++	ret = get_user_pages_remote(task, mm,
++			(unsigned long)addr, pgcount, write, 0, pg, NULL);
++#elif (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0))
++	ret = get_user_pages_remote(task, mm,
++			(unsigned long)addr, pgcount, write ? FOLL_WRITE : 0,
++			pg, NULL);
++#else
++	ret = get_user_pages_remote(task, mm,
++			(unsigned long)addr, pgcount, write ? FOLL_WRITE : 0,
++			pg, NULL, NULL);
++#endif
+ 	up_read(&mm->mmap_sem);
+ 	if (ret != pgcount)
+ 		return -EINVAL;
+-- 
+2.1.4
+

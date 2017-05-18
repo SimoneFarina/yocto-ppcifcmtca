@@ -1,0 +1,45 @@
+From 5cbb3a1a3b2e09e1bc233b5627dba639efeb1506 Mon Sep 17 00:00:00 2001
+From: Simone Farina <simone.farina@esss.se>
+Date: Thu, 18 May 2017 18:07:56 +0200
+Subject: [PATCH] updated cipher.c to work with openssl 1.1.0
+
+---
+ cipher.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/cipher.c b/cipher.c
+index 59f6792..b4f6627 100644
+--- a/cipher.c
++++ b/cipher.c
+@@ -637,7 +637,7 @@ cipher_get_keyiv(struct sshcipher_ctx *cc, u_char *iv, u_int len)
+ 			   len, iv))
+ 			       return SSH_ERR_LIBCRYPTO_ERROR;
+ 		} else
+-			memcpy(iv, cc->evp->iv, len);
++			memcpy(iv, EVP_CIPHER_CTX_iv(cc->evp), len);
+ 		break;
+ #endif
+ #ifdef WITH_SSH1
+@@ -687,7 +687,7 @@ cipher_set_keyiv(struct sshcipher_ctx *cc, const u_char *iv)
+ 			    EVP_CTRL_GCM_SET_IV_FIXED, -1, (void *)iv))
+ 				return SSH_ERR_LIBCRYPTO_ERROR;
+ 		} else
+-			memcpy(cc->evp->iv, iv, evplen);
++			memcpy(EVP_CIPHER_CTX_iv_noconst(cc->evp), iv, evplen);
+ 		break;
+ #endif
+ #ifdef WITH_SSH1
+@@ -703,8 +703,8 @@ cipher_set_keyiv(struct sshcipher_ctx *cc, const u_char *iv)
+ }
+ 
+ #ifdef WITH_OPENSSL
+-#define EVP_X_STATE(evp)	(evp)->cipher_data
+-#define EVP_X_STATE_LEN(evp)	(evp)->cipher->ctx_size
++#define EVP_X_STATE(evp)	EVP_CIPHER_CTX_get_cipher_data(evp)
++#define EVP_X_STATE_LEN(evp)	EVP_CIPHER_impl_ctx_size(EVP_CIPHER_CTX_cipher(evp))
+ #endif
+ 
+ int
+-- 
+2.1.4
+
