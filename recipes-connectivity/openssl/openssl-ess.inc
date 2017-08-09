@@ -8,33 +8,22 @@ SECTION = "libs/network"
 LICENSE = "openssl"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=f9a8f968107345e0b75aa8c2ecaa7ec8"
 
-DEPENDS = "hostperl-runtime-native"
+DEPENDS = "makedepend-native hostperl-runtime-native"
 DEPENDS_append_class-target = " openssl-native"
 
-PROVIDES = "openssl"
-
-#python() {
-#    pkgs = d.getVar('PACKAGES', True).split()
-#    for p in pkgs:
-#        if 'openssl-qoriq' in p:
-#            d.appendVar("RPROVIDES_%s" % p, p.replace('openssl-qoriq', 'openssl'))
-#            d.appendVar("RCONFLICTS_%s" % p, p.replace('openssl-qoriq', 'openssl'))
-#            d.appendVar("RREPLACES_%s" % p, p.replace('openssl-qoriq', 'openssl'))
-#}
+PROVIDES += "openssl10 openssl"
 
 #SRC_URI = "http://www.openssl.org/source/openssl-${PV}.tar.gz \
 #          "
+#S = "${WORKDIR}/openssl-${PV}"
+
 SRC_URI = "git://github.com/openssl/openssl;branch=OpenSSL_1_1_0-stable \
           "
 SRCREV = "0453163e9a9052884cce288ff3e2acb77725a239"
-# 6fc37bee4a5f81d8f00e6ad45865b6b697163f06
-
-#S = "${WORKDIR}/openssl-${PV}"
 S = "${WORKDIR}/git"
 
 PACKAGECONFIG[perl] = ",,,"
 
-#AR_append = " -r"
 TERMIO_libc-musl = "-DTERMIOS"
 TERMIO ?= "-DTERMIO"
 # Avoid binaries being marked as requiring an executable stack since it 
@@ -45,24 +34,27 @@ CFLAG = "${@base_conditional('SITEINFO_ENDIANNESS', 'le', '-DL_ENDIAN', '-DB_END
 export DIRS = "crypto ssl apps"
 export EX_LIBS = "-lgcc -ldl"
 export AS = "${CC} -c"
-EXTRA_OEMAKE = "-e MAKEFLAGS="
 
-inherit pkgconfig siteinfo multilib_header ptest
+# double check following one
+EXTRA_OEMAKE = "-e MAKEFLAGS= "
 
-PACKAGES =+ "libcrypto libssl ${PN}-misc ${PN}-conf"
+inherit pkgconfig siteinfo multilib_header ptest relative_symlinks
+
+PACKAGES =+ "libcrypto libssl ${PN}-misc openssl-conf"
 FILES_libcrypto = "${libdir}/libcrypto${SOLIBS}"
 FILES_libssl = "${libdir}/libssl${SOLIBS}"
 FILES_${PN} =+ " ${libdir}/ssl/*"
 FILES_${PN}-misc = "${libdir}/ssl/misc"
-RDEPENDS_${PN}-misc = "${@bb.utils.contains('PACKAGECONFIG', 'perl', 'perl', '', d)}"
+RDEPENDS_${PN}-misc = "${@bb.utils.filter('PACKAGECONFIG', 'perl', d)}"
+#RDEPENDS_${PN}-misc = "${@bb.utils.contains('PACKAGECONFIG', 'perl', 'perl', '', d)}"
 
 # Add the openssl.cnf file to the openssl-conf package.  Make the libcrypto
 # package RRECOMMENDS on this package.  This will enable the configuration
 # file to be installed for both the base openssl package and the libcrypto
 # package since the base openssl package depends on the libcrypto package.
-FILES_${PN}-conf = "${sysconfdir}/ssl/openssl.cnf"
-CONFFILES_${PN}-conf = "${sysconfdir}/ssl/openssl.cnf"
-RRECOMMENDS_libcrypto += "${PN}-conf"
+FILES_openssl-conf = "${sysconfdir}/ssl/openssl.cnf"
+CONFFILES_openssl-conf = "${sysconfdir}/ssl/openssl.cnf"
+RRECOMMENDS_libcrypto += "openssl-conf"
 RDEPENDS_${PN}-ptest += "${PN}-misc make perl perl-module-filehandle bc"
 
 # Remove this to enable SSLv3. SSLv3 is defaulted to disabled due to the POODLE
@@ -124,15 +116,24 @@ do_configure () {
 	linux-gnu64-x86_64)
 		target=linux-x86_64
 		;;
-	linux-mips)
-		target=debian-mips
+	linux-gnun32-mips*el)
+		target=debian-mipsn32el
 		;;
-	linux-mipsel)
+	linux-gnun32-mips*)
+		target=debian-mipsn32
+		;;
+	linux-mips*64*el)
+		target=debian-mips64el
+		;;
+	linux-mips*64*)
+		target=debian-mips64
+		;;
+	linux-mips*el)
 		target=debian-mipsel
 		;;
-        linux-*-mips64 | linux-mips64)
-               target=linux-mips
-                ;;
+	linux-mips*)
+		target=debian-mips
+		;;
 	linux-microblaze*|linux-nios2*)
 		target=linux-generic32
 		;;
@@ -166,84 +167,123 @@ do_compile_prepend_class-target () {
 }
 
 do_compile () {
+	oe_runmake depend
 	oe_runmake
 }
 
 do_compile_ptest () {
 	# build dependencies for test directory too
 	export DIRS="$DIRS test"
-
-	#oe_runmake buildtest
-
-#	oe_runmake tests
+#	oe_runmake depend
+#	oe_runmake buildtest
+	oe_runmake tests
 }
 
 do_install () {
+	# Apparently all are absolute paths so they need some fixing
+
+echo "############################################"
+echo "############################################"
+echo "############################################"
+echo "${D} | ${sysconfdir} | ${libdir} | ${prefix}"
+echo "############################################"
+echo "############################################"
+echo "############################################"
+
 	# Create ${D}/${prefix} to fix parallel issues
 	mkdir -p ${D}/${prefix}/
+#	mkdir -p ${prefix}/
 
-#	oe_runmake INSTALL_PREFIX="${D}" MANDIR="${mandir}" install
+	oe_runmake INSTALL_PREFIX="${D}" MANDIR="${mandir}" install
 
 	oe_libinstall -so libcrypto ${D}${libdir}
 	oe_libinstall -so libssl ${D}${libdir}
+#	oe_libinstall -so libcrypto ${libdir}
+#	oe_libinstall -so libssl ${libdir}
+
 
 	install -d ${D}${includedir}
 	cp --dereference -R include/openssl ${D}${includedir}
+#	install -d ${includedir}
+#	cp --dereference -R include/openssl ${includedir}
 
 #	install -Dm 0755 ${WORKDIR}/openssl-c_rehash.sh ${D}${bindir}/c_rehash
 #	sed -i -e 's,/etc/openssl,${sysconfdir}/ssl,g' ${D}${bindir}/c_rehash
 
 	oe_multilib_header openssl/opensslconf.h
-	if [ "${@bb.utils.contains('PACKAGECONFIG', 'perl', 'perl', '', d)}" = "perl" ]; then
+	if [ "${@bb.utils.filter('PACKAGECONFIG', 'perl', d)}" ]; then
+		install -m 0755 ${S}/tools/c_rehash ${D}${bindir}
+        sed -i -e '1s,.*,#!${bindir}/env perl,' ${D}${bindir}/c_rehash
 		sed -i -e '1s,.*,#!${bindir}/env perl,' ${D}${libdir}/ssl/misc/CA.pl
 		sed -i -e '1s,.*,#!${bindir}/env perl,' ${D}${libdir}/ssl/misc/tsget
+#		install -m 0755 ${S}/tools/c_rehash ${bindir}
+#		sed -i -e '1s,.*,#!${bindir}/env perl,' ${bindir}/c_rehash
+#		sed -i -e '1s,.*,#!${bindir}/env perl,' ${libdir}/ssl/misc/CA.pl
+#		sed -i -e '1s,.*,#!${bindir}/env perl,' ${libdir}/ssl/misc/tsget
 	else
 		rm -f ${D}${libdir}/ssl/misc/CA.pl ${D}${libdir}/ssl/misc/tsget
+#		rm -f ${libdir}/ssl/misc/CA.pl ${libdir}/ssl/misc/tsget
 	fi
 
 	# Create SSL structure
 	install -d ${D}${sysconfdir}/ssl/
-	echo "${D} : ${libdir} : ${sysconfdir} : ${prefix}"
-#	mv ${D}${libdir}/ssl/openssl.cnf \
-#	   ${D}${libdir}/ssl/certs \
-#	   ${D}${libdir}/ssl/private \
-#	   \
-#	   ${D}${sysconfdir}/ssl/
-	mv ${D}/../recipe-sysroot-native/etc/ssl/openssl.cnf \
-	   ${D}/../recipe-sysroot-native/etc/ssl/certs \
-	   ${D}/../recipe-sysroot-native/etc/ssl/private \
+	mv ${D}${libdir}/ssl/openssl.cnf \
+	   ${D}${libdir}/ssl/certs \
+	   ${D}${libdir}/ssl/private \
 	   \
 	   ${D}${sysconfdir}/ssl/
-
-	install -d ${D}${libdir}/ssl/
-	install -d ${D}${libdir}/ssl/certs
-	install -d ${D}${libdir}/ssl/private
-
 	ln -sf ${sysconfdir}/ssl/certs ${D}${libdir}/ssl/certs
 	ln -sf ${sysconfdir}/ssl/private ${D}${libdir}/ssl/private
 	ln -sf ${sysconfdir}/ssl/openssl.cnf ${D}${libdir}/ssl/openssl.cnf
+#	install -d ${sysconfdir}/ssl/
+#	mv ${libdir}/ssl/openssl.cnf \
+#	   ${libdir}/ssl/certs \
+#	   ${libdir}/ssl/private \
+#	   \
+#	   ${sysconfdir}/ssl/
+#	ln -sf ${sysconfdir}/ssl/certs ${libdir}/ssl/certs
+#	ln -sf ${sysconfdir}/ssl/private ${libdir}/ssl/private
+#	ln -sf ${sysconfdir}/ssl/openssl.cnf ${libdir}/ssl/openssl.cnf
 }
 
 do_install_ptest () {
-	cp -r -L Makefile.org Makefile test ${D}${PTEST_PATH}
+#	cp -r -L Makefile.org Makefile test ${D}${PTEST_PATH}
+	cp -r -L Makefile Makefile test ${D}${PTEST_PATH}
+
+        # Replace the path to native perl with the path to target perl
+        sed -i 's,^PERL=.*,PERL=${bindir}/perl,' ${D}${PTEST_PATH}/Makefile
+
 	cp Configure config e_os.h ${D}${PTEST_PATH}
 	cp -r -L include ${D}${PTEST_PATH}
 	ln -sf ${libdir}/libcrypto.a ${D}${PTEST_PATH}
 	ln -sf ${libdir}/libssl.a ${D}${PTEST_PATH}
 	mkdir -p ${D}${PTEST_PATH}/crypto
-	cp crypto/constant_time_locl.h ${D}${PTEST_PATH}/crypto
-	cp -r certs ${D}${PTEST_PATH}
+#	cp crypto/constant_time_locl.h ${D}${PTEST_PATH}/crypto
+	cp include/internal/constant_time_locl.h ${D}${PTEST_PATH}/crypto
+#	cp -r certs ${D}${PTEST_PATH}
+	cp -r test/certs ${D}${PTEST_PATH}
 	mkdir -p ${D}${PTEST_PATH}/apps
 	ln -sf ${libdir}/ssl/misc/CA.sh  ${D}${PTEST_PATH}/apps
 	ln -sf ${sysconfdir}/ssl/openssl.cnf ${D}${PTEST_PATH}/apps
 	ln -sf ${bindir}/openssl         ${D}${PTEST_PATH}/apps
+	cp apps/server.pem              ${D}${PTEST_PATH}/apps
 	cp apps/server2.pem             ${D}${PTEST_PATH}/apps
 	mkdir -p ${D}${PTEST_PATH}/util
 	install util/opensslwrap.sh    ${D}${PTEST_PATH}/util
 	install util/shlib_wrap.sh     ${D}${PTEST_PATH}/util
-}
-
-do_install_ptest_base () {
+	# Time stamps are relevant for "make alltests", otherwise
+	# make may try to recompile binaries. Not only must the
+	# binary files be newer than the sources, they also must
+	# be more recent than the header files in /usr/include.
+	#
+	# Using "cp -a" is not sufficient, because do_install
+	# does not preserve the original time stamps.
+	#
+	# So instead of using the original file stamps, we set
+	# the current time for all files. Binaries will get
+	# modified again later when stripping them, but that's okay.
+	touch ${D}${PTEST_PATH}
+	find ${D}${PTEST_PATH} -type f -print0 | xargs --verbose -0 touch -r ${D}${PTEST_PATH}
 }
 
 do_install_append_class-native() {
@@ -254,3 +294,4 @@ do_install_append_class-native() {
 	    OPENSSL_ENGINES=${libdir}/ssl/engines
 }
 
+#BBCLASSEXTEND = "native nativesdk"

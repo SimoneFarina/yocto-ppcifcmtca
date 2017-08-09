@@ -1,20 +1,21 @@
-require openssl-qoriq-ess.inc
+#require openssl-qoriq-ess.inc
+require openssl-ess.inc
+
 
 DISABLE_STATIC = ""
-RRECOMMENDS_libcrypto += "cryptodev-module"
+#RRECOMMENDS_libcrypto += "cryptodev-module"
 #COMPATIBLE_MACHINE = "(qoriq)"
 
 # For target side versions of openssl enable support for OCF Linux driver
 # if they are available.
 DEPENDS += "cryptodev-linux"
 
-#S = "${WORKDIR}/git"
-
 CFLAG += "-DHAVE_CRYPTODEV -DUSE_CRYPTODEV_DIGESTS"
 
-#EXTRA_OEMAKE='KERNEL_DIR="${STAGING_KERNEL_DIR}" DESTDIR="${D}"'
+EXTRA_OEMAKE='KERNEL_DIR="${STAGING_KERNEL_DIR}" DESTDIR="${D}" '
 
-LIC_FILES_CHKSUM = "file://LICENSE;md5=cae6da10f4ffd9703214776d2aabce32"
+#LIC_FILES_CHKSUM = "file://LICENSE;md5=cae6da10f4ffd9703214776d2aabce32"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=2100bdc885ac4cdc9783c562639ddc1f"
 
 export DIRS = "crypto ssl apps engines"
 export OE_LDFLAGS="${LDFLAGS}"
@@ -102,7 +103,9 @@ export OE_LDFLAGS="${LDFLAGS}"
 #SRC_URI[sha256sum] = "1d4007e53aad94a5b2002fe045ee7bb0b3d98f1a47f8b2bc851dcd1c74332919"
 
 PACKAGES =+ "${PN}-engines"
-FILES_${PN}-engines = "${libdir}/ssl/engines/*.so ${libdir}/engines"
+FILES_${PN}-engines = "${libdir}/ssl/engines/*.so ${libdir}/engines ${libdir}/engines-1.1/*.so"
+
+#FILES_${PN} += "${libdir}/engines-1.1/*.so"
 
 # The crypto_use_bigint patch means that perl's bignum module needs to be
 # installed, but some distributions (for example Fedora 23) don't ship it by
